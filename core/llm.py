@@ -7,6 +7,6 @@ def get_llm():
         openai_api_key=config.API_KEY,  
         openai_api_base=config.BASE_URL,
         temperature=0.7,              
-        max_tokens=500
+        max_tokens=2048
     )
     return llm
