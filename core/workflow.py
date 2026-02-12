@@ -10,7 +10,7 @@ class AgentState(TypedDict):
     # 用户输入
     image_path: str        
     user_style: str
-    words_limit: str  # 新增修改: 接收用户要求生成文案长度的量       
+    words_limit: str  # FourthCommit新增修改: 接收用户要求生成文案长度的量       
     # 中间量处理
     image_data: Dict      
     retrieved_examples: List[str] 
@@ -64,7 +64,7 @@ def generate_node(state: AgentState) -> Dict:
     attrs = state['image_data']
     examples = "\n".join([f"- {ex}" for ex in state['retrieved_examples']])
     style = state['user_style']
-    limit = state.get('words_limit', '适中')  # 新增有关文案长度的量
+    limit = state.get('words_limit', '适中')  # FourthCommit新增有关文案长度的量
     
     # 2. 构建 Prompt
     prompt = f"""
@@ -85,7 +85,7 @@ def generate_node(state: AgentState) -> Dict:
     【要求】：
     1. 必须符合指定的“{style}”风格。
     2. 突出商品的视觉亮点（如颜色、材质）。
-    3. 可以用少量Emoji点缀，让语气更轻松，但别让表情盖过内容本身，也不要用“YYDS”“绝绝子”这类泛滥词。
+    3. 不要用“YYDS”“绝绝子”这类泛滥词。
     4. 输出格式清晰，不要包含“根据以上信息...”等废话，直接输出文案内容
     """
 

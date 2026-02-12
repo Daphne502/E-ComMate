@@ -2,12 +2,8 @@ import streamlit as st
 import os
 import time
 from PIL import Image
-import shutil
 
-try:
-    from core.workflow import create_workflow
-except ImportError:
-    create_workflow = None
+from core.workflow import create_workflow
 
 # 基础页面配置
 st.set_page_config(
@@ -20,17 +16,11 @@ st.set_page_config(
 # CSS 样式
 st.markdown("""
 <style>
-    /* 全局字体优化 */
     * { font-family: 'Inter', sans-serif !important; }
-    
-    /* 隐藏默认的菜单和页脚 */
     #MainMenu, footer, header { visibility: hidden; }
-
-    /* 聊天气泡样式 */
     .chat-row { display: flex; margin-bottom: 20px; }
     .user-row { justify-content: flex-end; }
     .bot-row { justify-content: flex-start; }
-    
     .chat-bubble {
         padding: 15px 20px;
         border-radius: 12px;
@@ -39,43 +29,31 @@ st.markdown("""
         line-height: 1.6;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .user-bubble {
-        background-color: #3B82F6;
-        color: white;
-        border-bottom-right-radius: 2px;
-    }
-    .bot-bubble {
-        background-color: white;
-        border: 1px solid #E5E7EB;
-        color: #1F2937;
-        border-bottom-left-radius: 2px;
-    }
-
-    /* 步骤条样式 */
+    .user-bubble { background-color: #3B82F6; color: white; border-bottom-right-radius: 2px; }
+    .bot-bubble { background-color: white; border: 1px solid #E5E7EB; color: #1F2937; border-bottom-left-radius: 2px; }
     .step-box {
         padding: 10px; margin: 5px 0;
         background: #EFF6FF; border: 1px solid #BFDBFE;
         color: #1E40AF; border-radius: 8px; font-size: 13px;
     }
-    .step-done {
-        background: #F0FDF4; border: 1px solid #BBF7D0;
-        color: #166534;
-    }
-
-    /* 底部固定栏样式 */
+    .step-done { background: #F0FDF4; border: 1px solid #BBF7D0; color: #166534; }
     .fixed-bottom {
         position: fixed; bottom: 0; left: 0; right: 0;
         background: white; padding: 20px;
         border-top: 1px solid #E5E7EB;
         z-index: 999;
-        /* 这里预留左边距给侧边栏，防止遮挡 */
         padding-left: 22rem; 
     }
-    /* 为了不被底部栏遮挡内容 */
     .main-content { padding-bottom: 150px; }
 </style>
 """, unsafe_allow_html=True)
 
+# SixthCommit新增修改: 流式输出模拟器
+def stream_text_simulator(text):
+    for word in text:
+        yield word
+        time.sleep(0.02)
+        
 # 初始化状态
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -92,9 +70,8 @@ with st.sidebar:
     length_limit = st.slider("篇幅限制", 50, 1000, 300, step=50)
     
     st.markdown("---")
-    # 动态提示，展示不同风格的特点
     tips = {
-        "小红书种草": "特点：口语化、Emoji丰富、体验感强",
+        "小红书种草": "特点：强互动感、Emoji丰富、体验感强",
         "京东/淘宝电商": "特点：参数详实、功能点突出、甚至理性",
         "朋友圈私域": "特点：像朋友一样聊天、软植入、信任感",
         "抖音直播": "特点：短促有力、甚至有点紧迫感、引导下单"
@@ -105,12 +82,11 @@ with st.sidebar:
     st.caption("Designed by Daphne502")
 
 # 主区域：标题与消息展示
-st.markdown('<div class="main-content">', unsafe_allow_html=True) # 开始内容包裹
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
 st.title("E-ComMate Workspace")
 st.markdown("上传商品图片，一键生成适配各平台的营销文案。")
 st.divider()
 
-# 如果没有消息，显示欢迎语
 if not st.session_state.messages:
     st.markdown("""
     <div class="chat-row bot-row">
@@ -152,17 +128,17 @@ for msg in st.session_state.messages:
         with st.expander("查看 Vision 解析与参考数据 (Debug Info)"):
             st.json(msg.get("debug_data", {"info": "无调试数据"}))
 
-# 核心生成逻辑 (带 Loading 动画)
+# 核心生成逻辑 (修改了流式输出和校验)
 if st.session_state.generating:
-    st.session_state.generating = False # 重置状态
-    
-    # 占位符，用来显示进度动画
+    st.session_state.generating = False
+
     status_placeholder = st.empty()
     
     try:
+        # SixthCommit新增修改: 视觉分析
         with status_placeholder.container():
             st.markdown('<div class="step-box">正在分析商品视觉特征...</div>', unsafe_allow_html=True)
-            time.sleep(0.8) # 模拟耗时，让动画被人看清
+            time.sleep(0.8) # 模拟 Vision 模型耗时
             
         with status_placeholder.container():
             st.markdown('<div class="step-box step-done">视觉分析完成</div>', unsafe_allow_html=True)
@@ -183,31 +159,69 @@ if st.session_state.generating:
                 inputs = {
                     "image_path": st.session_state.temp_img_path,
                     "user_style": style_option,
-                    "words_limit": length_limit,
+                    "words_limit": str(length_limit),
                     "image_data": {}, 
                     "retrieved_examples": [],
                     "final_copy": ""
                 }
                 res = app.invoke(inputs)
+                # [真实] 商品图校验逻辑
+                image_data = res.get("image_data", {})
+                description = image_data.get("description", "")
+                is_invalid = (not description) or ("未知商品" in description)
+                
+                if is_invalid:
+                    # 执行 DOM 操作前，先清理占位符
+                    status_placeholder.empty()
+                    time.sleep(0.1)
+                    
+                    st.error("识别失败：这似乎不是一张商品图，或者图片无法解析。")
+                    st.session_state.messages.append({
+                        "role": "bot", "type": "text", 
+                        "content": "图片解析失败，请上传主体清晰的商品图片重试。"
+                    })
+                    # 修改点1：校验失败后也需要 rerun 来同步状态，不要使用 st.stop()
+                    time.sleep(0.5) 
+                    st.rerun() 
+                
                 final_copy = res.get("final_copy", "生成出错")
                 debug_info = {
-                    "vision_tags": res.get("image_data", {}),
-                    "references": res.get("retrieved_examples", [])
+                    "vision_analysis": image_data,
+                    "rag_references": res.get("retrieved_examples", [])
                 }
             else:
-                # 保底 Mock
-                final_copy = f"【{style_option}】这里是生成的文案内容...\n\n这款产品真的非常不错，适合夏天使用！"
-                debug_info = {"tag": "demo_mode", "confidence": 0.98}
+                time.sleep(2)
+                final_copy = "这是演示文案..."
+                debug_info = {"info": "Demo Mode"}
+            
+        status_placeholder.empty()
+        
+        # --- SixthCommit新增修改：增加一个微小的缓冲时间 ---
+        # 解释：给浏览器留出 0.2 秒SixCommit的时间来从屏幕上清除上面的“进度条”组件。
+        # 如果不加这个，第一次运行时前端渲染会撞车，导致流式输出卡顿。
+        time.sleep(6) 
+        # --- 修改结束 ---
 
-        status_placeholder.empty() # 清除进度条
-
-        # 存入历史并刷新
+        # 流式输出 (打字机效果)
+        result_container = st.chat_message("assistant", avatar="🛍️")
+        response_stream = stream_text_simulator(final_copy)
+        # SixthCommit新增修改
+        full_text = result_container.write_stream(response_stream)
+           
+        
+        # [SixthCommit新增/修改逻辑]: 渲染完成后直接在这里显示调试信息
+        with st.expander("查看 Vision 解析与参考数据 (Debug Info)"):
+            st.json(debug_info)
+            
+        # 存入历史并刷新   
         st.session_state.messages.append({
             "role": "bot", 
             "type": "result", 
             "content": final_copy,
             "debug_data": debug_info
         })
+        # SixthCommit新增改动,增加了sleep时间
+        time.sleep(0.8) 
         st.rerun()
 
     except Exception as e:
@@ -258,6 +272,3 @@ if start_btn:
             "content": f"帮我写一份 {style_option} 的文案，大约 {length_limit} 字。"
         })
         st.rerun()
-        
-if os.path.exists("temp"):
-    shutil.rmtree("temp")
