@@ -14,6 +14,8 @@
 
 ### [点击这里在线体验 (Hugging Face Spaces)](https://daphne502-e-commate.hf.space)
 
+**示例商品图片：**
+
 <img src="assets/demo_image.jpg" width="300" height="400" alt="Demo Screenshot">
 
 ---
@@ -53,17 +55,17 @@ flowchart TB
         FinalCopy[/"最终生成文案"/]
         End(("End"))
   end
-    User(["用户上传图片 + 需求"]) L_User_UI_0@--> UI["Streamlit 前端界面"]
-    UI --> Start
-    Start --> Vision
-    Vision -- "调用 Qwen-VL" --> Attributes
-    Vision --> Retrieve
-    Retrieve -- ChromaDB 向量匹配 --> Examples
-    Attributes --> Generate
-    Examples --> Generate
-    Generate -- "调用 Qwen-Plus" --> FinalCopy
-    FinalCopy --> End
-    End --> UI
+    User(["用户上传图片 + 需求"]) L_User_UI_0@==> UI["Streamlit 前端界面"]
+    UI ==> Start
+    Start ==> Vision
+    Vision == "调用 Qwen-VL" ==> Attributes
+    Vision ==> Retrieve
+    Retrieve == ChromaDB 向量匹配 ==> Examples
+    Attributes ==> Generate
+    Examples ==> Generate
+    Generate == "调用 Qwen-Plus" ==> FinalCopy
+    FinalCopy ==> End
+    End ==> UI
 
      End:::term
      FinalCopy:::data
@@ -83,7 +85,18 @@ flowchart TB
     classDef term fill:#000,stroke:#000,color:#fff
     style End stroke:#FFCDD2,fill:#FFF9C4,color:#000000
     style Start fill:#FFF9C4,color:#000000,stroke:#FFCDD2
-    style AgentScope fill:transparent,stroke:#999,stroke-width:2px
+    style AgentScope fill:#FFE0B2,stroke:#FFCDD2,stroke-width:2px
+    linkStyle 0 stroke:#FF6D00,fill:none
+    linkStyle 1 stroke:#FF6D00,fill:none
+    linkStyle 2 stroke:#FF6D00,fill:none
+    linkStyle 3 stroke:#FF6D00,fill:none
+    linkStyle 4 stroke:#FF6D00,fill:none
+    linkStyle 5 stroke:#FF6D00,fill:none
+    linkStyle 6 stroke:#FF6D00,fill:none
+    linkStyle 7 stroke:#FF6D00,fill:none
+    linkStyle 8 stroke:#FF6D00,fill:none
+    linkStyle 9 stroke:#FF6D00,fill:none
+    linkStyle 10 stroke:#FF6D00,fill:none
 
     L_User_UI_0@{ curve: linear }
 ```
