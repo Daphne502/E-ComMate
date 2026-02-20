@@ -1,4 +1,4 @@
-# E-ComMate：多模态电商文案生成 Agent
+# E-ComMate：多模态电商营销文案自动化生成 Agent
 
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/[你的用户名]/[你的Space名称])
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.38.0-FF4B4B.svg)
@@ -6,7 +6,7 @@
 ![DashScope](https://img.shields.io/badge/Model-Qwen--VL--Max-orange.svg)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 
-> **简介**：E-ComMate 是一个基于 **LangGraph** 工作流编排与 **Qwen-VL** 多模态大模型的智能电商营销助手。它能够“看懂”商品图片，并结合 **RAG** 风格知识库，一键生成小红书、朋友圈、京东等特定风格的爆款文案。
+> **项目背景**：E-ComMate 是一个基于 **LangGraph** 工作流编排与 **Qwen-VL** 多模态大模型的智能电商营销助手。它能够“看懂”商品图片，并结合 **RAG** 风格知识库，一键生成小红书、朋友圈、京东等特定风格的爆款文案。
 
 ---
 
@@ -17,6 +17,9 @@
 **示例商品图片：**
 
 <img src="assets/demo_image.jpg" width="300" height="400" alt="Demo Screenshot">
+
+**在线视频演示：**
+[![Bilibili](https://i0.hdslb.com/bfs/archive/0e68a2fca1b3f6f97d65c93268df703795d0f992.jpg@672w_378h_1c.avif)](https://www.bilibili.com/video/BV1WRf3BHEDK?t=0.0)
 
 ---
 
