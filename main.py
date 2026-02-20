@@ -67,7 +67,7 @@ with st.sidebar:
     
     st.markdown("---")
     style_option = st.selectbox("文案风格", ["小红书种草", "京东/淘宝电商", "朋友圈私域", "抖音直播"])
-    length_limit = st.slider("篇幅限制", 50, 1000, 300, step=50)
+    length_limit = st.slider("篇幅限制", 0, 300, 100, step=20)
     
     st.markdown("---")
     tips = {
@@ -112,11 +112,13 @@ for msg in st.session_state.messages:
         # 图片专门显示
         col1, col2 = st.columns([1, 4])
         with col2:
-            if os.path.exists(msg["content"]):
+            # SeventhCommit：兼容读取字节流(bytes)或本地路径。使用字节流摆脱对本地 temp 图片的依赖
+            if isinstance(msg["content"], bytes):
+                st.image(msg["content"], width=250)
+            elif isinstance(msg["content"], str) and os.path.exists(msg["content"]):
                 st.image(msg["content"], width=250)
     
     elif msg["type"] == "result":
-        # 结果专门显示，带 Expander
         st.markdown(f"""
         <div class="chat-row bot-row">
             <div class="chat-bubble bot-bubble" style="width: 100%; max-width: 100%;">
@@ -124,31 +126,26 @@ for msg in st.session_state.messages:
             </div>
         </div>
         """, unsafe_allow_html=True)
-        # 你的“技术亮点”：折叠的调试信息
+        # 折叠的调试信息
         with st.expander("查看 Vision 解析与参考数据 (Debug Info)"):
             st.json(msg.get("debug_data", {"info": "无调试数据"}))
 
 # 核心生成逻辑 (修改了流式输出和校验)
 if st.session_state.generating:
     st.session_state.generating = False
-
-    status_placeholder = st.empty()
     
+    # SeventhCommit: 废弃手动控制的 st.empty() 进度条，改为 Streamlit 原生的 st.status()
+        # 彻底解决频繁操作 DOM 树导致流式输出触发 removeChild 报错的问题
+  
     try:
-        # SixthCommit新增修改: 视觉分析
-        with status_placeholder.container():
-            st.markdown('<div class="step-box">正在分析商品视觉特征...</div>', unsafe_allow_html=True)
+        with st.status("正在分析商品特征与检索爆款...", expanded=True) as status:
+            st.write("正在分析商品视觉特征...")
             time.sleep(0.8) # 模拟 Vision 模型耗时
             
-        with status_placeholder.container():
-            st.markdown('<div class="step-box step-done">视觉分析完成</div>', unsafe_allow_html=True)
-            st.markdown('<div class="step-box">正在检索相似爆款文案 (RAG)...</div>', unsafe_allow_html=True)
+            st.write("正在检索相似爆款文案 (RAG)...")
             time.sleep(0.8)
-
-        with status_placeholder.container():
-            st.markdown('<div class="step-box step-done">视觉分析完成</div>', unsafe_allow_html=True)
-            st.markdown('<div class="step-box step-done">RAG 检索完成</div>', unsafe_allow_html=True)
-            st.markdown('<div class="step-box">正在撰写最终文案...</div>', unsafe_allow_html=True)
+            
+            st.write("正在撰写最终文案...")
             time.sleep(0.8)
             
             final_copy = ""
@@ -171,18 +168,23 @@ if st.session_state.generating:
                 is_invalid = (not description) or ("未知商品" in description)
                 
                 if is_invalid:
-                    # 执行 DOM 操作前，先清理占位符
-                    status_placeholder.empty()
-                    time.sleep(0.1)
-                    
+                    # SeventhCommit: 校验失败时更新状态框
+                    status.update(label="识别失败", state="error", expanded=True)
                     st.error("识别失败：这似乎不是一张商品图，或者图片无法解析。")
                     st.session_state.messages.append({
                         "role": "bot", "type": "text", 
                         "content": "图片解析失败，请上传主体清晰的商品图片重试。"
                     })
-                    # 修改点1：校验失败后也需要 rerun 来同步状态，不要使用 st.stop()
-                    time.sleep(0.5) 
-                    st.rerun() 
+                    
+                    # SeventhCommit：解析失败，直接清理 temp 临时文件
+                    if os.path.exists(st.session_state.temp_img_path):
+                        try:
+                            os.remove(st.session_state.temp_img_path)
+                        except Exception as e:
+                            print(f"清理临时文件失败: {e}")
+                            
+                    time.sleep(1) 
+                    st.rerun()
                 
                 final_copy = res.get("final_copy", "生成出错")
                 debug_info = {
@@ -193,16 +195,11 @@ if st.session_state.generating:
                 time.sleep(2)
                 final_copy = "这是演示文案..."
                 debug_info = {"info": "Demo Mode"}
-            
-        status_placeholder.empty()
-        
-        # --- SixthCommit新增修改：增加一个微小的缓冲时间 ---
-        # 解释：给浏览器留出 0.2 秒SixCommit的时间来从屏幕上清除上面的“进度条”组件。
-        # 如果不加这个，第一次运行时前端渲染会撞车，导致流式输出卡顿。
-        time.sleep(6) 
-        # --- 修改结束 ---
+                
+            # SeventhCommit: 任务完成,更新状态框为完成并折叠
+            status.update(label="文案生成完毕！", state="complete", expanded=False)
 
-        # 流式输出 (打字机效果)
+        # SeventhCommit：删除了 `time.sleep(6)` 和 `status_placeholder.empty()`，st.status 自己会处理好 DOM 渲染
         result_container = st.chat_message("assistant", avatar="🛍️")
         response_stream = stream_text_simulator(final_copy)
         # SixthCommit新增修改
@@ -217,15 +214,20 @@ if st.session_state.generating:
         st.session_state.messages.append({
             "role": "bot", 
             "type": "result", 
-            "content": final_copy,
+            "content": full_text, # 存入完整的文案文本
             "debug_data": debug_info
         })
-        # SixthCommit新增改动,增加了sleep时间
-        time.sleep(0.8) 
+        # SeventhCommit：正常跑完流程后，彻底删除本地的 temp 图片，实现随用随删。
+        if os.path.exists(st.session_state.temp_img_path):
+            try:
+                os.remove(st.session_state.temp_img_path)
+            except Exception as e:
+                print(f"清理临时文件失败: {e}")
+        
+        # SeventhCommit：删除之前为 DOM 缓冲留的 0.8s 睡眠时间，让体验更顺滑
         st.rerun()
 
     except Exception as e:
-        status_placeholder.empty()
         st.error(f"运行出错: {str(e)}")
 
 st.markdown('</div>', unsafe_allow_html=True) # 结束内容包裹
@@ -249,21 +251,25 @@ if uploaded_file:
     os.makedirs("temp", exist_ok=True)
     file_path = os.path.join("temp", uploaded_file.name)
     
+    # SeventhCommit：在这里定义 image_bytes
+    image_bytes = uploaded_file.getvalue()
+    
     # 只有当文件是新上传的时候才处理
     if "temp_img_path" not in st.session_state or st.session_state.temp_img_path != file_path:
         with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+            f.write(image_bytes)
         
         st.session_state.temp_img_path = file_path
-        # 把图片加入聊天记录
+        
+        # SeventhCommit：存入聊天记录的是字节流(image_bytes)而非本地路径。这样哪怕后面 `os.remove()` 删了硬盘里的图片，聊天界面的历史记录也照样能渲染出来
         st.session_state.messages.append({
-            "role": "user", "type": "image", "content": file_path
+            "role": "user", "type": "image", "content": image_bytes
         })
         st.rerun()
 
 if start_btn:
     if "temp_img_path" not in st.session_state:
-        st.toast("请先上传一张图片！") # 用 Toast 提示更像原生 App
+        st.toast("请先上传一张图片！") 
     else:
         st.session_state.generating = True
         st.session_state.messages.append({
