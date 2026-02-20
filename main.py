@@ -138,18 +138,27 @@ if st.session_state.generating:
         # 彻底解决频繁操作 DOM 树导致流式输出触发 removeChild 报错的问题
   
     try:
-        with st.status("正在分析商品特征与检索爆款...", expanded=True) as status:
-            st.write("正在分析商品视觉特征...")
-            time.sleep(0.8) # 模拟 Vision 模型耗时
+        # EighthCommit: 进入生成前，先检查并恢复临时文件，确保图片复用性
+        if not os.path.exists(st.session_state.temp_img_path):
+            # 从消息历史中找到最后一张图片的字节流
+            last_image_bytes = next(
+                (msg["content"] for msg in reversed(st.session_state.messages) if msg["type"] == "image"), 
+                None
+            )
+            if last_image_bytes:
+                with open(st.session_state.temp_img_path, "wb") as f:
+                    f.write(last_image_bytes)
+    
+        # EighthCommit：简化 st.status 的使用，避免状态框文字堆叠
+        # 不再频繁使用 state="error" 等参数，直接通过 label 更新状态           
+        with st.status("正在处理中...", expanded=True) as status:
+            status.update(label="正在分析视觉特征...")
+            time.sleep(0.5) 
             
-            st.write("正在检索相似爆款文案 (RAG)...")
-            time.sleep(0.8)
+            status.update(label="正在检索参考范例...")
+            time.sleep(0.5)
             
-            st.write("正在撰写最终文案...")
-            time.sleep(0.8)
-            
-            final_copy = ""
-            debug_info = {}
+            status.update(label="正在撰写最终文案...")
             
             if create_workflow:
                 app = create_workflow()
@@ -162,37 +171,16 @@ if st.session_state.generating:
                     "final_copy": ""
                 }
                 res = app.invoke(inputs)
-                # [真实] 商品图校验逻辑
+                
+                # EighthCommit：移除“识别失败”的硬报错
                 image_data = res.get("image_data", {})
-                description = image_data.get("description", "")
-                is_invalid = (not description) or ("未知商品" in description)
-                
-                if is_invalid:
-                    # SeventhCommit: 校验失败时更新状态框
-                    status.update(label="识别失败", state="error", expanded=True)
-                    st.error("识别失败：这似乎不是一张商品图，或者图片无法解析。")
-                    st.session_state.messages.append({
-                        "role": "bot", "type": "text", 
-                        "content": "图片解析失败，请上传主体清晰的商品图片重试。"
-                    })
-                    
-                    # SeventhCommit：解析失败，直接清理 temp 临时文件
-                    if os.path.exists(st.session_state.temp_img_path):
-                        try:
-                            os.remove(st.session_state.temp_img_path)
-                        except Exception as e:
-                            print(f"清理临时文件失败: {e}")
-                            
-                    time.sleep(1) 
-                    st.rerun()
-                
                 final_copy = res.get("final_copy", "生成出错")
                 debug_info = {
                     "vision_analysis": image_data,
                     "rag_references": res.get("retrieved_examples", [])
                 }
             else:
-                time.sleep(2)
+                time.sleep(1)
                 final_copy = "这是演示文案..."
                 debug_info = {"info": "Demo Mode"}
                 
@@ -205,7 +193,6 @@ if st.session_state.generating:
         # SixthCommit新增修改
         full_text = result_container.write_stream(response_stream)
            
-        
         # [SixthCommit新增/修改逻辑]: 渲染完成后直接在这里显示调试信息
         with st.expander("查看 Vision 解析与参考数据 (Debug Info)"):
             st.json(debug_info)
@@ -214,16 +201,13 @@ if st.session_state.generating:
         st.session_state.messages.append({
             "role": "bot", 
             "type": "result", 
-            "content": full_text, # 存入完整的文案文本
+            "content": full_text, 
             "debug_data": debug_info
         })
-        # SeventhCommit：正常跑完流程后，彻底删除本地的 temp 图片，实现随用随删。
+
         if os.path.exists(st.session_state.temp_img_path):
-            try:
-                os.remove(st.session_state.temp_img_path)
-            except Exception as e:
-                print(f"清理临时文件失败: {e}")
-        
+            os.remove(st.session_state.temp_img_path)
+
         # SeventhCommit：删除之前为 DOM 缓冲留的 0.8s 睡眠时间，让体验更顺滑
         st.rerun()
 
