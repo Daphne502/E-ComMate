@@ -11,6 +11,7 @@ class AgentState(TypedDict):
     image_path: str        
     user_style: str
     words_limit: str  # FourthCommit新增修改: 接收用户要求生成文案长度的量       
+    user_note: str  # refactor: 接收用户特定需求
     # 中间量处理
     image_data: Dict      
     retrieved_examples: List[str] 
@@ -65,8 +66,9 @@ def generate_node(state: AgentState) -> Dict:
     examples = "\n".join([f"- {ex}" for ex in state['retrieved_examples']])
     style = state['user_style']
     limit = state.get('words_limit', '适中')  # FourthCommit新增有关文案长度的量
+    note = state.get('user_note', '无') # refactor: 获取用户备注
     
-    # 2. 构建 Prompt
+    # refactor: 增强Prompt
     prompt = f"""
     你是一个金牌电商文案撰写专家。请根据以下信息撰写一篇吸引人的营销文案。
 
@@ -79,6 +81,9 @@ def generate_node(state: AgentState) -> Dict:
     【长度要求】： 
     {limit}
     
+    【用户特别要求】：{note}  <-- 必须优先满足这一点
+    【字数限制】：严格控制在 {limit} 字以内 (宁缺毋滥)
+
     【参考高分范例】（请学习其语气、结构，但不要照抄）：
     {examples}
     

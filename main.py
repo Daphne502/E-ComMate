@@ -17,7 +17,6 @@ st.set_page_config(
 # NinthCommit: <style>内第一行不再使用 * 强制覆盖，确保 Streamlit 的图标字体能正常渲染
 st.markdown("""
 <style>
-    html, body, [class*="st-"] { font-family: 'Inter', sans-serif; }
     #MainMenu, footer, header { visibility: hidden; }
     .chat-row { display: flex; margin-bottom: 20px; }
     .user-row { justify-content: flex-end; }
@@ -40,10 +39,9 @@ st.markdown("""
     .step-done { background: #F0FDF4; border: 1px solid #BBF7D0; color: #166534; }
     .fixed-bottom {
         position: fixed; bottom: 0; left: 0; right: 0;
-        background: white; padding: 20px;
+        background: white; padding: 10px 20px 30px 21rem;
         border-top: 1px solid #E5E7EB;
         z-index: 999;
-        padding-left: 22rem; 
     }
     .main-content { padding-bottom: 150px; }
 </style>
@@ -79,6 +77,14 @@ with st.sidebar:
     }
     st.info(tips[style_option])
     
+    # refactor: 增加“清空对话”按钮
+    if st.button("清空所有对话", use_container_width=True):
+        st.session_state.messages = []
+        # 清理可能存在的临时路径状态
+        if "temp_img_path" in st.session_state:
+            del st.session_state.temp_img_path
+        st.rerun()
+
     st.markdown("---")
     st.caption("Designed by Daphne502")
 
@@ -165,6 +171,7 @@ if st.session_state.generating:
                     "image_path": st.session_state.temp_img_path,
                     "user_style": style_option,
                     "words_limit": str(length_limit),
+                    "user_note": st.session_state.get("current_user_note", ""), # 传给 Agent
                     "image_data": {}, 
                     "retrieved_examples": [],
                     "final_copy": ""
@@ -184,7 +191,7 @@ if st.session_state.generating:
                 debug_info = {"info": "Demo Mode"}
                 
             # SeventhCommit: 任务完成,更新状态框为完成并折叠
-            status.update(label="文案生成完毕！", state="complete", expanded=False)
+            status.update(label="文案生成完毕！", expanded=False)
 
         # SeventhCommit：删除了 `time.sleep(6)` 和 `status_placeholder.empty()`，st.status 自己会处理好 DOM 渲染
         result_container = st.chat_message("assistant", avatar="🛍️")
@@ -213,15 +220,18 @@ if st.session_state.generating:
     except Exception as e:
         st.error(f"运行出错: {str(e)}")
 
-st.markdown('</div>', unsafe_allow_html=True) # 结束内容包裹
+st.markdown('</div>', unsafe_allow_html=True)
 
 # 底部固定交互区
 st.markdown('<div class="fixed-bottom">', unsafe_allow_html=True)
-c1, c2 = st.columns([4, 1])
+with st.container():
+    c1, c2 = st.columns([4, 1])
 
 with c1:
     uploaded_file = st.file_uploader("上传图片", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
-
+    # refactor: 补充需求输入框
+    user_note = st.text_input("有什么特别想强调的吗？", placeholder="例如：突出8折优惠、纯棉材质、送礼首选...", label_visibility="collapsed")
+    
 with c2:
     st.markdown("<br>", unsafe_allow_html=True) 
     start_btn = st.button("开始生成", use_container_width=True, type="primary")
@@ -245,9 +255,7 @@ if uploaded_file:
         st.session_state.temp_img_path = file_path
         
         # SeventhCommit：存入聊天记录的是字节流(image_bytes)而非本地路径。这样哪怕后面 `os.remove()` 删了硬盘里的图片，聊天界面的历史记录也照样能渲染出来
-        st.session_state.messages.append({
-            "role": "user", "type": "image", "content": image_bytes
-        })
+        st.session_state.messages.append({"role": "user", "type": "image", "content": image_bytes})
         st.rerun()
 
 if start_btn:
@@ -255,9 +263,10 @@ if start_btn:
         st.toast("请先上传一张图片！") 
     else:
         st.session_state.generating = True
+        st.session_state.current_user_note = user_note
         st.session_state.messages.append({
             "role": "user", 
             "type": "text", 
-            "content": f"帮我写一份 {style_option} 的文案，大约 {length_limit} 字。"
+            "content": f"要求：{style_option}，约{length_limit}字。备注：{user_note if user_note else '无'}"
         })
         st.rerun()
