@@ -41,7 +41,7 @@
 config:
   layout: dagre
   theme: base
-  look: handDrawn
+  look: neo
 ---
 flowchart TB
  subgraph AgentScope["LangGraph 智能体核心流程"]
