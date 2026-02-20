@@ -14,9 +14,10 @@ st.set_page_config(
 )
 
 # CSS 样式
+# NinthCommit: <style>内第一行不再使用 * 强制覆盖，确保 Streamlit 的图标字体能正常渲染
 st.markdown("""
 <style>
-    * { font-family: 'Inter', sans-serif !important; }
+    html, body, [class*="st-"] { font-family: 'Inter', sans-serif; }
     #MainMenu, footer, header { visibility: hidden; }
     .chat-row { display: flex; margin-bottom: 20px; }
     .user-row { justify-content: flex-end; }
@@ -140,11 +141,7 @@ if st.session_state.generating:
     try:
         # EighthCommit: 进入生成前，先检查并恢复临时文件，确保图片复用性
         if not os.path.exists(st.session_state.temp_img_path):
-            # 从消息历史中找到最后一张图片的字节流
-            last_image_bytes = next(
-                (msg["content"] for msg in reversed(st.session_state.messages) if msg["type"] == "image"), 
-                None
-            )
+            last_image_bytes = next((msg["content"] for msg in reversed(st.session_state.messages) if msg["type"] == "image"), None)
             if last_image_bytes:
                 with open(st.session_state.temp_img_path, "wb") as f:
                     f.write(last_image_bytes)
@@ -152,6 +149,8 @@ if st.session_state.generating:
         # EighthCommit：简化 st.status 的使用，避免状态框文字堆叠
         # 不再频繁使用 state="error" 等参数，直接通过 label 更新状态           
         with st.status("正在处理中...", expanded=True) as status:
+            st.write("正在分析商品特征...")
+            
             status.update(label="正在分析视觉特征...")
             time.sleep(0.5) 
             
