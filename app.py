@@ -193,7 +193,7 @@ if st.session_state.generating:
             # SeventhCommit: 任务完成,更新状态框为完成并折叠
             status.update(label="文案生成完毕！", expanded=False)
 
-        # SeventhCommit：删除了 `time.sleep(6)` 和 `status_placeholder.empty()`，st.status 自己会处理好 DOM 渲染
+        # SeventhCommit：删除了 `time.sleep(6)` 和 `status_placeholder.empty()`
         result_container = st.chat_message("assistant", avatar="🛍️")
         response_stream = stream_text_simulator(final_copy)
         # SixthCommit新增修改
