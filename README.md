@@ -16,9 +16,10 @@
 
 **示例商品图片：**
 
-<img src="assets/demo_image.jpg" width="300" height="400" alt="Demo Screenshot">
+<img src="assets/demo_image.jpg" width="200" height="267" alt="Demo Screenshot">
 
-**在线视频演示：**
+### 在线视频演示（可直接点击下方视频观看）：
+
 [![Bilibili](https://i0.hdslb.com/bfs/archive/0e68a2fca1b3f6f97d65c93268df703795d0f992.jpg@672w_378h_1c.avif)](https://www.bilibili.com/video/BV1WRf3BHEDK?t=0.0)
 
 ---
