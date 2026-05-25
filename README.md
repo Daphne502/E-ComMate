@@ -6,7 +6,12 @@
 ![DashScope](https://img.shields.io/badge/Model-Qwen--VL--Max-orange.svg)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 
-> **项目背景**：E-ComMate 是一个基于 **LangGraph** 工作流编排与 **Qwen-VL** 多模态大模型的智能电商营销助手。它能够“看懂”商品图片，并结合 **RAG** 风格知识库，一键生成小红书、朋友圈、京东等特定风格的爆款文案。
+上传商品图片，自动理解外观与卖点，并结合风格范例生成营销文案。支持小红书、京东/淘宝、朋友圈、抖音等文风，可设置字数与补充要求
+
+ **实现要点**
+- 用 LangGraph 串联三步：视觉解析 → 风格检索 → 文案生成，便于单独调试
+- Qwen-VL 解析商品结构化信息，ChromaDB 从本地风格库检索相似范例（RAG）
+- Streamlit 提供上传、对话式展示与生成流程，可部署到 Hugging Face Spaces
 
 ---
 
