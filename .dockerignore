@@ -1,7 +1,11 @@
 venv/
 myenv/
-temp/
 __pycache__/
+*.pyc
 .git/
+.temp/
+temp/
+.streamlit/secrets.toml
 .env
 eval/eval_report.json
+*.md
