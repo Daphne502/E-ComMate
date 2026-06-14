@@ -187,6 +187,7 @@ if st.session_state.generating:
                 "vision_analysis": res.get("image_data", {}),
                 "rag_references": res.get("retrieved_examples", []),
                 "elapsed_ms": res.get("elapsed_ms"),
+                "node_timings": res.get("timings", {}),   # ← 新增
             }
                 
             # SeventhCommit: 任务完成,更新状态框为完成并折叠

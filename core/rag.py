@@ -1,3 +1,10 @@
+STYLE_MAP = {
+    "小红书种草": "小红书",
+    "京东/淘宝电商": "电商",
+    "朋友圈私域": "朋友圈",
+    "抖音直播": "抖音直播",
+}
+
 import os
 import pandas as pd
 import config
@@ -15,6 +22,15 @@ def get_embeddings():
         openai_api_base=config.BASE_URL,
         check_embedding_ctx_length=False 
     )
+
+_vector_store = None  # 模块级单例
+
+def get_vector_store():
+    """全局只初始化/加载一次向量库"""
+    global _vector_store
+    if _vector_store is None:
+        _vector_store = initialize_rag()
+    return _vector_store
 
 def initialize_rag():
     """
@@ -56,14 +72,20 @@ def initialize_rag():
     return vector_store
 
 def retrieve_examples(query_style: str, k: int = 3):
-    """
-    根据用户想要的风格 (query_style)，检索 k 个最相似的文案范例。
-    """
-    vector_store = initialize_rag()
+   
+    vector_store = get_vector_store()
     
-    print(f"正在检索风格: {query_style} ...")
-    
-    results = vector_store.similarity_search(query_style, k=k)
-    
+    # UI 风格名 → CSV metadata
+    mapped_style = STYLE_MAP.get(query_style, query_style)
+    print(f"正在检索风格: {query_style} (mapped: {mapped_style}) ...")
+    try:
+        results = vector_store.similarity_search(
+            query_style, 
+            k=k,
+            filter={"style": mapped_style},  # 关键：先过滤风格
+        )
+    except Exception as e:
+        print(f"带 filter 检索失败，降级为无 filter: {e}")
+        results = vector_store.similarity_search(query_style, k=k)
     examples = [doc.page_content for doc in results]
     return examples

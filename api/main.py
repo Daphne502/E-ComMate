@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.schemas import GenerateResponse, HealthResponse
 from core.workflow import create_workflow
+from core.logging_config import setup_logging
+setup_logging()
 
 app = FastAPI(
     title="E-ComMate API",
@@ -60,6 +62,7 @@ async def generate_copy(
             "image_data": {},
             "retrieved_examples": [],
             "final_copy": "",
+            "timings": {},
         }
         result = workflow.invoke(inputs)
 
@@ -70,6 +73,7 @@ async def generate_copy(
             image_data=result.get("image_data", {}),
             retrieved_examples=result.get("retrieved_examples", []),
             elapsed_ms=elapsed_ms,
+            timings=result.get("timings", {}),
         )
     finally:
         # 4. 清理临时文件

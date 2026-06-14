@@ -1,9 +1,22 @@
-from typing import TypedDict, List, Dict
+from typing import TypedDict, List, Dict, Annotated
+from langgraph.graph import START
 from langgraph.graph import StateGraph, END
 
 from core.llm import get_llm
 from core.vision import analyze_image
 from core.rag import retrieve_examples
+
+import time
+from core.logging_config import get_logger
+logger = get_logger("workflow")
+
+def merge_timings(old: Dict[str, int], new: Dict[str, int]) -> Dict[str, int]:
+    """LangGraph reducer：合并各节点的 timings，而不是覆盖"""
+    if old is None:
+        old = {}
+    if new is None:
+        new = {}
+    return {**old, **new}
 
 # 定义State
 class AgentState(TypedDict):
@@ -16,52 +29,56 @@ class AgentState(TypedDict):
     image_data: Dict      
     retrieved_examples: List[str] 
     # 模型输出
-    final_copy: str 
+    final_copy: str
+    # 新增：各节点耗时（毫秒）
+    timings: Annotated[Dict[str, int], merge_timings]
 
 # 定义Nodes
 def vision_node(state: AgentState) -> Dict:
-    """
-    节点：视觉解析
-    输入：image_path
-    输出：更新 image_data
-    """
-    print(f"\n [Vision Node] 正在解析图片: {state['image_path']} ...")
+    t0 = time.perf_counter()
+    logger.info("[Vision Node] 开始解析: %s", state['image_path'])
     
     try:
         attributes = analyze_image(state['image_path'])
     except Exception as e:
-        print(f"视觉模块报错: {e}，使用默认空值")
-        attributes = {"description": "未知商品", "style": "未知", "color": "未知"}
-    
-    # 返回的内容会合并到 State 中
-    return {"image_data": attributes}
+        logger.exception("视觉模块报错，使用默认值")
+        attributes = {
+            "description": "未知商品",
+            "style": "未知",
+            "color_palette": [],
+            "material": "未知",
+            "target_audience": "未知",
+        }
+    elapsed = int((time.perf_counter() - t0) * 1000)
+    logger.info("[Vision Node] 完成，耗时 %dms", elapsed)
+
+    return {
+        "image_data": attributes,
+        "timings": {"vision_ms": elapsed},
+    }
 
 def retrieve_node(state: AgentState) -> Dict:
-    """
-    节点：RAG 检索
-    输入：user_style
-    输出：更新 retrieved_examples
-    """
-    style = state['user_style']
-    print(f"\n [Retrieval Node] 正在检索风格: {style} ...")
-    
+    t1 = time.perf_counter()
+    logger.info("[Retrieval Node] 开始检索: %s", state['user_style'])
+
     try:
-        examples = retrieve_examples(style, k=3)
+        examples = retrieve_examples(state['user_style'], k=3)
     except Exception as e:
-        print(f"RAG 模块报错: {e}，使用默认空值")
+        logger.exception("RAG 模块报错，使用默认空值")
         examples = ["暂无参考范例"]
         
-    return {"retrieved_examples": examples}
+    elapsed = int((time.perf_counter() - t1) * 1000)
+    logger.info("[Retrieval Node] 完成，耗时 %dms", elapsed)
+
+    return {
+        "retrieved_examples": examples,
+        "timings": {"retrieve_ms": elapsed},
+    }
 
 def generate_node(state: AgentState) -> Dict:
-    """
-    节点：文案生成
-    输入：image_data, retrieved_examples, user_style, words_limit
-    输出：更新 final_copy
-    """
-    print("\n [Generation Node] 正在生成最终文案 ...")
-    
-    # 1. 获取所有上下文
+    t2 = time.perf_counter()
+    logger.info("[Generation Node] 开始生成: %s", state['image_path'])
+
     attrs = state['image_data']
     examples = "\n".join([f"- {ex}" for ex in state['retrieved_examples']])
     style = state['user_style']
@@ -82,7 +99,7 @@ def generate_node(state: AgentState) -> Dict:
     {limit}
     
     【用户特别要求】：{note}  <-- 必须优先满足这一点
-    【字数限制】：严格控制在 {limit} 字以内 (宁缺毋滥)
+    【字数限制】：控制在 {limit} 字左右（+/- 30字）
 
     【参考高分范例】（请学习其语气、结构，但不要照抄）：
     {examples}
@@ -98,21 +115,28 @@ def generate_node(state: AgentState) -> Dict:
     llm = get_llm()
     response = llm.invoke(prompt)  
     
-    return {"final_copy": response.content}
+    elapsed = int((time.perf_counter() - t2) * 1000)
+    logger.info("[Generation Node] 完成，耗时 %dms", elapsed)
 
-# Graph Construction
+    return {
+        "final_copy": response.content,
+        "timings": {"generate_ms": elapsed}
+    }
+
 def create_workflow():
     workflow = StateGraph(AgentState)
-    
+
     workflow.add_node("vision_step", vision_node)
     workflow.add_node("retrieve_step", retrieve_node)
     workflow.add_node("generate_step", generate_node)
-    
-    # 流程：Start -> Vision -> Retrieve -> Generate -> End
-    workflow.set_entry_point("vision_step")
-    workflow.add_edge("vision_step", "retrieve_step")
+
+    # 并行：START 同时触发 vision 和 retrieve
+    workflow.add_edge(START, "vision_step")
+    workflow.add_edge(START, "retrieve_step")
+
+    # generate 等两个节点都完成
+    workflow.add_edge("vision_step", "generate_step")
     workflow.add_edge("retrieve_step", "generate_step")
     workflow.add_edge("generate_step", END)
-    
-    app = workflow.compile()
-    return app
+
+    return workflow.compile()
