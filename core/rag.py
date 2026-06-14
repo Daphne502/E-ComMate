@@ -11,6 +11,7 @@ import config
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
+from core.cache import get_cached_examples, set_cached_examples
 
 def get_embeddings():
     """
@@ -78,6 +79,13 @@ def retrieve_examples(query_style: str, k: int = 3):
     # UI 风格名 → CSV metadata
     mapped_style = STYLE_MAP.get(query_style, query_style)
     print(f"正在检索风格: {query_style} (mapped: {mapped_style}) ...")
+
+    # 1. 先查 Redis
+    cached = get_cached_examples(mapped_style, k=k)
+    if cached is not None:
+        return cached
+
+    # 2. 未命中 → Chroma    
     try:
         results = vector_store.similarity_search(
             query_style, 
@@ -88,4 +96,7 @@ def retrieve_examples(query_style: str, k: int = 3):
         print(f"带 filter 检索失败，降级为无 filter: {e}")
         results = vector_store.similarity_search(query_style, k=k)
     examples = [doc.page_content for doc in results]
+    # 3. 写入 Redis
+    set_cached_examples(mapped_style, examples, k=k)
+    
     return examples
