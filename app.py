@@ -67,7 +67,7 @@ with st.sidebar:
     
     st.markdown("---")
     style_option = st.selectbox("文案风格", ["小红书种草", "京东/淘宝电商", "朋友圈私域", "抖音直播"])
-    length_limit = st.slider("篇幅限制", 0, 300, 100, step=20)
+    length_limit = st.slider("篇幅限制", 0, 600, 100, step=20)
     
     st.markdown("---")
     tips = {

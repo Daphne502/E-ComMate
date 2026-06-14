@@ -1,0 +1,148 @@
+[
+  {
+    "id": "case_01",
+    "image_path": "assets/demo_image1.jpg",
+    "user_style": "小红书种草",
+    "words_limit": 100,
+    "user_note": "强调显瘦和松弛感",
+    "checks": {
+      "max_chars": 130,
+      "must_contain_any": ["瘦", "修身", "松弛", "版型", "斜肩", "粉色"],
+      "must_not_contain": ["生成出错", "图片解析失败"]
+    }
+  },
+  {
+    "id": "case_02",
+    "image_path": "assets/demo_image1.jpg",
+    "user_style": "京东/淘宝电商",
+    "words_limit": 150,
+    "user_note": "突出材质和搭配",
+    "checks": {
+      "max_chars": 180,
+      "must_contain_any": ["针织", "棉", "材质", "面料", "裙", "上衣"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_03",
+    "image_path": "assets/demo_image1.jpg",
+    "user_style": "抖音直播",
+    "words_limit": 200,
+    "user_note": "突出618狂欢节",
+    "checks": {
+      "max_chars": 240,
+      "must_contain_any": ["618", "狂欢", "抢", "直播", "下单", "链接"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_04",
+    "image_path": "assets/demo_image1.jpg",
+    "user_style": "朋友圈私域",
+    "words_limit": 80,
+    "user_note": "适合周末出门穿",
+    "checks": {
+      "max_chars": 100,
+      "must_contain_any": ["出门", "穿", "搭配", "周末", "粉"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+
+  {
+    "id": "case_05",
+    "image_path": "assets/demo_image2.jpg",
+    "user_style": "小红书种草",
+    "words_limit": 100,
+    "user_note": "强调可爱和三丽鸥",
+    "checks": {
+      "max_chars": 130,
+      "must_contain_any": ["可爱", "三丽鸥", "Hello", "Kitty", "草莓", "摆件", "TOP"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_06",
+    "image_path": "assets/demo_image2.jpg",
+    "user_style": "京东/淘宝电商",
+    "words_limit": 120,
+    "user_note": "突出IP联名和收藏价值",
+    "checks": {
+      "max_chars": 150,
+      "must_contain_any": ["IP", "联名", "收藏", "限定", "正品", "三丽鸥", "盲盒", "摆件"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_07",
+    "image_path": "assets/demo_image2.jpg",
+    "user_style": "朋友圈私域",
+    "words_limit": 90,
+    "user_note": "适合送闺蜜当礼物",
+    "checks": {
+      "max_chars": 110,
+      "must_contain_any": ["礼物", "闺蜜", "送", "可爱", "草莓"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_08",
+    "image_path": "assets/demo_image2.jpg",
+    "user_style": "抖音直播",
+    "words_limit": 180,
+    "user_note": "库存不多限时抢",
+    "checks": {
+      "max_chars": 220,
+      "must_contain_any": ["抢", "限时", "库存", "下单", "链接", "直播"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+
+  {
+    "id": "case_09",
+    "image_path": "assets/demo_image3.jpg",
+    "user_style": "小红书种草",
+    "words_limit": 100,
+    "user_note": "强调芝士口感",
+    "checks": {
+      "max_chars": 130,
+      "must_contain_any": ["芝士", "Kiri", "口感", "奶香", "黄油", "饼干"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_10",
+    "image_path": "assets/demo_image3.jpg",
+    "user_style": "京东/淘宝电商",
+    "words_limit": 140,
+    "user_note": "突出顺丰冷链和手工制作",
+    "checks": {
+      "max_chars": 170,
+      "must_contain_any": ["顺丰", "冷链", "手工", "100%", "Kiri", "Échiré", "黄油"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_11",
+    "image_path": "assets/demo_image3.jpg",
+    "user_style": "朋友圈私域",
+    "words_limit": 85,
+    "user_note": "适合下午茶分享",
+    "checks": {
+      "max_chars": 105,
+      "must_contain_any": ["下午茶", "分享", "吃", "搭配", "茶", "芝士"],
+      "must_not_contain": ["生成出错"]
+    }
+  },
+  {
+    "id": "case_12",
+    "image_path": "assets/demo_image3.jpg",
+    "user_style": "抖音直播",
+    "words_limit": 160,
+    "user_note": "限时优惠赶紧拍",
+    "checks": {
+      "max_chars": 200,
+      "must_contain_any": ["限时", "优惠", "抢", "拍", "下单", "直播"],
+      "must_not_contain": ["生成出错"]
+    }
+  }
+]
