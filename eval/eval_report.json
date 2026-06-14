@@ -1,0 +1,266 @@
+{
+  "project": "E-ComMate",
+  "evaluated_at": "2026-06-14T18:00:29",
+  "summary": {
+    "total_cases": 12,
+    "passed_cases": 12,
+    "pass_rate": 100.0,
+    "error_cases": 0,
+    "avg_elapsed_ms": 7658,
+    "avg_retrieve_ms": 194
+  },
+  "results": [
+    {
+      "id": "case_01",
+      "user_style": "小红书种草",
+      "user_note": "强调显瘦和松弛感",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "救命！这身浅粉斜肩上衣+深棕高腰裙也太显瘦了吧～✨棉质混纺软糯垂顺，斜肩+系带设计拉长脖颈线，不对称褶皱自带松弛感，不费力就赢！配色温柔又高级，都市通勤or约会...",
+      "timings": {
+        "retrieve_ms": 1555,
+        "vision_ms": 5208,
+        "generate_ms": 1654
+      },
+      "elapsed_ms": 6864
+    },
+    {
+      "id": "case_02",
+      "user_style": "京东/淘宝电商",
+      "user_note": "突出材质和搭配",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "浅粉斜肩上衣+深棕短裙套装｜棉质混纺，亲肤透气不闷热！精选高支棉混纺面料，柔软垂顺，久穿不易皱；斜肩设计+前侧系带，自然垂落一肩，打造慵懒又精致的不对称褶皱。浅...",
+      "timings": {
+        "retrieve_ms": 4,
+        "vision_ms": 3977,
+        "generate_ms": 2270
+      },
+      "elapsed_ms": 6250
+    },
+    {
+      "id": "case_03",
+      "user_style": "抖音直播",
+      "user_note": "突出618狂欢节",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "家人们快看！618狂欢节爆款王炸来啦🔥浅粉针织斜肩上衣+深棕短裙套装，今儿直播间专属价直接砍半！✨斜肩设计悄悄露肩，慵懒又高级；前侧系带垂坠感绝了，不对称小心机...",
+      "timings": {
+        "retrieve_ms": 380,
+        "vision_ms": 3193,
+        "generate_ms": 2656
+      },
+      "elapsed_ms": 5855
+    },
+    {
+      "id": "case_04",
+      "user_style": "朋友圈私域",
+      "user_note": "适合周末出门穿",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "周末出门就穿它！浅粉斜肩上衣+深棕短裙，纯棉软糯透气，系带褶皱超有设计感～简约不费力，温柔又有型✨",
+      "timings": {
+        "retrieve_ms": 355,
+        "vision_ms": 3819,
+        "generate_ms": 1318
+      },
+      "elapsed_ms": 5141
+    },
+    {
+      "id": "case_05",
+      "user_style": "小红书种草",
+      "user_note": "强调可爱和三丽鸥",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "救命！三丽鸥草莓限定萌翻我了🍓Hello Kitty+My Melody全穿上草莓小裙裙，红白绿配色甜度爆表！毛绒沙发是立体草莓造型，塑料小玩偶细节超精致～抱在...",
+      "timings": {
+        "retrieve_ms": 10,
+        "vision_ms": 6589,
+        "generate_ms": 2102
+      },
+      "elapsed_ms": 8697
+    },
+    {
+      "id": "case_06",
+      "user_style": "京东/淘宝电商",
+      "user_note": "突出IP联名和收藏价值",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "【Sanrio正版授权】Hello Kitty×My Melody草莓限定联名系列！IP官方认证，附专属收藏编号卡。红白绿萌系配色，毛绒沙发+塑料玩偶双材质精工...",
+      "timings": {
+        "retrieve_ms": 3,
+        "vision_ms": 5076,
+        "generate_ms": 2183
+      },
+      "elapsed_ms": 7264
+    },
+    {
+      "id": "case_07",
+      "user_style": "朋友圈私域",
+      "user_note": "适合送闺蜜当礼物",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "刚拆盒就被萌化了🍓！Hello Kitty和My Melody穿草莓裙、戴嫩叶小帽，毛绒+哑光塑料质感超治愈～红白绿配色甜而不腻，摆在书桌/床头都是软fufu的...",
+      "timings": {
+        "retrieve_ms": 4,
+        "vision_ms": 3859,
+        "generate_ms": 1583
+      },
+      "elapsed_ms": 5446
+    },
+    {
+      "id": "case_08",
+      "user_style": "抖音直播",
+      "user_note": "库存不多限时抢",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "家人们快看！🍓草莓甜心限定款玩偶来啦！Hello Kitty+My Melody双萌出击——红白绿配色超治愈，毛绒沙发是草莓造型，塑料配件精致不掉漆！头戴带绿叶...",
+      "timings": {
+        "retrieve_ms": 8,
+        "vision_ms": 5208,
+        "generate_ms": 2667
+      },
+      "elapsed_ms": 7880
+    },
+    {
+      "id": "case_09",
+      "user_style": "小红书种草",
+      "user_note": "强调芝士口感",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "救命！这口芝士真的会爆浆！！🧀切开瞬间拉丝+微融，咸香浓郁到上头～金黄酥脆外壳+软糯面包体，混着橙色果干的清甜，一口就沦陷！米白+金黄+橙的配色太治愈，手工盒装...",
+      "timings": {
+        "retrieve_ms": 2,
+        "vision_ms": 5090,
+        "generate_ms": 1830
+      },
+      "elapsed_ms": 6925
+    },
+    {
+      "id": "case_10",
+      "user_style": "京东/淘宝电商",
+      "user_note": "突出顺丰冷链和手工制作",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "【Kiri芝士风味面包｜顺丰冷链直达】  \n金黄酥脆碎屑+绵软面包体，内嵌醇厚KIRI芝士块与清甜橙色果干，搭配Échiré黄油香韵。每一只均100%手工制作，...",
+      "timings": {
+        "retrieve_ms": 2,
+        "vision_ms": 12310,
+        "generate_ms": 2476
+      },
+      "elapsed_ms": 14790
+    },
+    {
+      "id": "case_11",
+      "user_style": "朋友圈私域",
+      "user_note": "适合下午茶分享",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "下午茶时间到✨金黄酥脆的Kiri芝士面包，切开是融心白芝士+酸甜橙果干，米白盘上一抹暖意。Échiré黄油香+顺丰冷链直达，手作温度刚刚好。",
+      "timings": {
+        "retrieve_ms": 7,
+        "vision_ms": 7278,
+        "generate_ms": 1335
+      },
+      "elapsed_ms": 8619
+    },
+    {
+      "id": "case_12",
+      "user_style": "抖音直播",
+      "user_note": "限时优惠赶紧拍",
+      "passed": true,
+      "checks": {
+        "non_empty": true,
+        "no_error_phrase": true,
+        "length_ok": true,
+        "keyword_ok": true,
+        "vision_ok": true,
+        "passed": true
+      },
+      "copy_preview": "家人们快看！👀ZEST MAKE风味制造Kiri芝士饼干来啦！金黄酥脆外皮+绵软多孔内里，切开瞬间爆浆芝士+酸甜橙色果干，米白包装高级感拉满～用的都是Kiri真...",
+      "timings": {
+        "retrieve_ms": 2,
+        "vision_ms": 6053,
+        "generate_ms": 2116
+      },
+      "elapsed_ms": 8174
+    }
+  ]
+}

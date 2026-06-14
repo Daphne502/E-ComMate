@@ -1,0 +1,7 @@
+venv/
+myenv/
+temp/
+__pycache__/
+.git/
+.env
+eval/eval_report.json
