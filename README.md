@@ -1,153 +1,309 @@
 # E-ComMate：多模态电商营销文案自动化生成 Agent
 
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/[你的用户名]/[你的Space名称])
-![Streamlit](https://img.shields.io/badge/Streamlit-1.38.0-FF4B4B.svg)
-![LangChain](https://img.shields.io/badge/LangChain-v0.3-green.svg)
-![DashScope](https://img.shields.io/badge/Model-Qwen--VL--Max-orange.svg)
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+[![Hugging Face Spaces](https://img.shields.io/badge/🤗%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/daphne502/E-ComMate) ![Python](https://img.shields.io/badge/Python-3.12-blue.svg) ![LangGraph](https://img.shields.io/badge/LangGraph-1.0-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.128-teal.svg) ![Streamlit](https://img.shields.io/badge/Streamlit-1.38-FF4B4B.svg) ![Redis](https://img.shields.io/badge/Redis-Upstash%20%2F%20Local-red.svg)
 
-上传商品图片，自动理解外观与卖点，并结合风格范例生成营销文案。支持小红书、京东/淘宝、朋友圈、抖音等文风，可设置字数与补充要求
-
- **实现要点**
-- 用 LangGraph 串联三步：视觉解析 → 风格检索 → 文案生成，便于单独调试
-- Qwen-VL 解析商品结构化信息，ChromaDB 从本地风格库检索相似范例（RAG）
-- Streamlit 提供上传、对话式展示与生成流程，可部署到 Hugging Face Spaces
+上传商品图片，自动理解外观与卖点，结合风格范例生成多平台营销文案。支持小红书、京东/淘宝电商、朋友圈、抖音直播等文风，可设置字数与补充要求。
 
 ---
 
-## 项目演示 (Live Demo)
+## 在线体验
 
-### [点击这里在线体验 (Hugging Face Spaces)](https://daphne502-e-commate.hf.space)
+### [Hugging Face Spaces 在线 Demo](https://daphne502-e-commate.hf.space)
 
-**示例商品图片：**
+**示例商品图（`assets/`）：**
 
-<img src="assets/demo_image.jpg" width="200" height="267" alt="Demo Screenshot">
-
-### 在线视频演示（可直接点击下方视频观看）：
-
-[![Bilibili](https://i0.hdslb.com/bfs/archive/0e68a2fca1b3f6f97d65c93268df703795d0f992.jpg@672w_378h_1c.avif)](https://www.bilibili.com/video/BV1WRf3BHEDK?t=0.0)
+|      服饰       |      潮玩       |      食品       |
+| :-------------: | :-------------: | :-------------: |
+| <img src="assets/demo_image1.jpg" width="200" height="267" alt="Demo Screenshot"> | <img src="assets/demo_image2.jpg" width="200" height="200" alt="Demo Screenshot"> | <img src="assets/demo_image3.jpg" width="200" height="220" alt="Demo Screenshot"> |
 
 ---
 
 ## 核心痛点与解决方案
 
-在电商营销场景中，我们解决了以下核心问题：
-
-| 核心痛点 | E-ComMate 解决方案 | 技术支撑 |
-| :--- | :--- | :--- |
-| **视觉理解缺失** | AI 不再瞎编，而是精准识别商品的颜色、材质、版型等细节。 | **Qwen-VL-Max** (多模态大模型) |
-| **风格同质化** | 拒绝千篇一律，支持“小红书种草”、“朋友圈私域”、“京东硬广”等多种文风切换。 | **RAG** (检索增强生成) + **ChromaDB** |
-| **流程不可控** | 将视觉解析、风格检索、文案生成解耦，实现可控、可调试的 Agent 工作流。 | **LangGraph** (状态机编排) |
+| 核心痛点          | E-ComMate 解决方案                                     | 技术支撑                             |
+| :---------------- | :----------------------------------------------------- | :----------------------------------- |
+| **视觉理解缺失**  | 从商品图提取颜色、材质、版型等结构化属性，减少「瞎编」 | **Qwen-VL-Max** 多模态大模型         |
+| **风格同质化**    | 按平台切换文风，检索相似高分范例再生成                 | **RAG** + **ChromaDB** metadata 过滤 |
+| **流程不可控**    | 视觉解析、风格检索、文案生成解耦，节点可观测           | **LangGraph** StateGraph             |
+| **Demo 难工程化** | UI / API / Agent 三层分离，支持容器化与缓存            | **FastAPI** + **Docker** + **Redis** |
 
 ---
 
-## 系统架构 (Architecture)
+## 系统架构
 
-本项目采用模块化设计，数据流向如下：
+### 逻辑架构（前后端分离）
 
 ```mermaid
----
-config:
-  layout: dagre
-  theme: base
-  look: neo
----
 flowchart TB
- subgraph AgentScope["LangGraph 智能体核心流程"]
-    direction TB
-        Start(("Start"))
-        Vision["视觉解析节点"]
-        Retrieve["RAG 检索节点"]
-        Generate["文案生成节点"]
-        Attributes[/"提取属性 JSON"/]
-        Examples[/"相似风格范例"/]
-        FinalCopy[/"最终生成文案"/]
-        End(("End"))
-  end
-    User(["用户上传图片 + 需求"]) L_User_UI_0@==> UI["Streamlit 前端界面"]
-    UI ==> Start
-    Start ==> Vision
-    Vision == "调用 Qwen-VL" ==> Attributes
-    Vision ==> Retrieve
-    Retrieve == ChromaDB 向量匹配 ==> Examples
-    Attributes ==> Generate
-    Examples ==> Generate
-    Generate == "调用 Qwen-Plus" ==> FinalCopy
-    FinalCopy ==> End
-    End ==> UI
-
-     End:::term
-     FinalCopy:::data
-     Examples:::data
-     Attributes:::data
-     Generate:::process
-     Retrieve:::process
-     Vision:::process
-     Start:::term
-     User:::user
-     UI:::ui
-    classDef user fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
-    classDef ui fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
-    classDef agent fill:#fff,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5
-    classDef process fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
-    classDef data fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000,shape:parallelogram
-    classDef term fill:#000,stroke:#000,color:#fff
-    style End stroke:#FFCDD2,fill:#FFF9C4,color:#000000
-    style Start fill:#FFF9C4,color:#000000,stroke:#FFCDD2
-    style AgentScope fill:#FFE0B2,stroke:#FFCDD2,stroke-width:2px
-    linkStyle 0 stroke:#FF6D00,fill:none
-    linkStyle 1 stroke:#FF6D00,fill:none
-    linkStyle 2 stroke:#FF6D00,fill:none
-    linkStyle 3 stroke:#FF6D00,fill:none
-    linkStyle 4 stroke:#FF6D00,fill:none
-    linkStyle 5 stroke:#FF6D00,fill:none
-    linkStyle 6 stroke:#FF6D00,fill:none
-    linkStyle 7 stroke:#FF6D00,fill:none
-    linkStyle 8 stroke:#FF6D00,fill:none
-    linkStyle 9 stroke:#FF6D00,fill:none
-    linkStyle 10 stroke:#FF6D00,fill:none
-
-    L_User_UI_0@{ curve: linear }
+    START(("START")) --> Vision["vision_step<br/>视觉解析"]
+    START --> Retrieve["retrieve_step<br/>风格 RAG"]
+    Vision --> Generate["generate_step<br/>文案生成"]
+    Retrieve --> Generate
+    Generate --> END(("END"))
 ```
 
-## 技术栈 (Tech Stack)
+设计要点：
 
-- 大模型基座 (LLM):
-  - 文本生成: Aliyun Qwen-Plus (通义千问)
-  - 视觉理解: Aliyun Qwen-VL-Max
-  - 向量嵌入: Text-Embedding-V1
-- Agent 编排: LangChain / LangGraph (StateGraph)
-- RAG 知识库: ChromaDB (本地向量存储)
-- 前端交互: Streamlit (流式输出模拟、多模态 Session 管理)
-- 工程化: Pydantic (数据校验), Dotenv (环境管理), Hugging Face Spaces (云端部署)
+- Vision 与 Retrieve 无数据依赖，从 `START` 扇出并行，缩短总耗时
+- Retrieve 先查 Redis，未命中再查 ChromaDB，结果按风格缓存（TTL 1h）
+- API 返回 `timings`（各节点毫秒耗时），便于性能分析与面试演示
 
-## 📂 目录结构
+---
 
-```text
+## 技术栈
+
+| 层级       | 技术                                                         |
+| :--------- | :----------------------------------------------------------- |
+| 大模型     | 通义千问 Qwen-VL-Max（视觉）、Qwen-Plus（生成）、text-embedding-v1（向量）|
+| Agent 编排 | LangChain / LangGraph（StateGraph + 并行边 + timings reducer） |
+| RAG        | ChromaDB 本地向量库 + metadata 风格过滤                      |
+| 缓存       | Redis（本地 Docker / 线上 Upstash Serverless）               |
+| 后端       | FastAPI + Uvicorn                                            |
+| 前端       | Streamlit                                                    |
+| 部署       | Docker Compose（本地）/ 单容器 supervisord（Hugging Face Spaces） |
+| 评测       | 自研规则评测脚本（12 条用例，三品类 × 四风格）               |
+
+---
+
+## 工程亮点
+
+| 优化项        | 做法                                                         | 效果                                                 |
+| :------------ | :----------------------------------------------------------- | :--------------------------------------------------- |
+| API 网关层    | Streamlit 通过 `/api/v1/generate` 调用，不再直接 invoke Agent | 对齐生产架构，OpenAPI 可联调                         |
+| RAG 单例      | 向量库模块级懒加载，避免每次请求 reload                      | 消除重复初始化开销                                   |
+| metadata 过滤 | `filter={"style": mapped_style}` 先筛风格再语义检索          | 减少跨风格污染                                       |
+| Redis 缓存    | key: `ecommate:v1:style:{style}:k3`                          | 同风格 `retrieve_ms` 1949ms → 2ms                    |
+| 并行编排      | Vision ∥ Retrieve → Generate                                 | 总耗时 ≈ max(Vision, Retrieve) + Generate            |
+| 可观测性      | 结构化 logging + API 返回 `node_timings`                     | 各节点耗时透明                                       |
+| 质量回归      | `eval/run_eval.py` 批量评测                                  | 12 条规则用例通过率 100%（回归测试，非人工美学评分） |
+
+> 评测说明：当前为规则型回归测试（非空、Vision 有效、长度、备注关键词），用于 Prompt/流程改动后的快速验证，不代表主观文案质量上限。
+
+---
+
+## 目录结构
+
+```txt
 E-ComMate/
-├── main.py                 # Streamlit 前端入口 (UI逻辑与Session管理)
-├── config.py               # 全局配置中心 (环境变量读取)
-├── requirements.txt        # 项目依赖库列表
-├── core/                   # [核心逻辑层]
-│   ├── workflow.py         # LangGraph 图编排 (Agent 状态机定义)
-│   ├── vision.py           # 视觉解析模块 (Prompt Engineering + Output Parser)
-│   ├── rag.py              # 向量检索模块 (ChromaDB + Embedding)
-│   └── llm.py              # 模型初始化封装
+├── api/                      # FastAPI 网关
+│   ├── main.py               # /health, /api/v1/generate
+│   └── schemas.py            # Pydantic 响应模型
+├── core/                     # Agent 核心
+│   ├── workflow.py           # LangGraph 编排（并行 + timings）
+│   ├── vision.py             # Qwen-VL 视觉解析
+│   ├── rag.py                # ChromaDB + STYLE_MAP + 单例
+│   ├── cache.py              # Redis 读写封装（失败自动降级）
+│   ├── llm.py                # Qwen-Plus 封装
+│   └── logging_config.py     # 统一日志
+├── eval/                     # 批量评测
+│   ├── test_cases.json       # 12 条测试用例
+│   ├── run_eval.py           # 评测脚本
+│   └── eval_report.json      # 运行后生成
+├── assets/                   # 演示图片
 ├── data/
-│   ├── styles.csv          # 文案风格原始数据 (小红书/朋友圈/电商)
-│   └── chroma_db/          # 自动生成的本地向量索引 (运行后生成)
-└── assets/                 # 静态资源 (测试图片、截图)
+│   ├── styles.csv            # 风格范例原始数据
+│   └── chroma_db/            # 向量索引（不提交 Git，运行时构建）
+├── app.py                    # Streamlit 前端
+├── config.py                 # 环境变量
+├── docker-compose.yml        # 本地三服务编排（api + streamlit + redis）
+├── Dockerfile                # HF Spaces 单容器镜像
+├── Dockerfile.api            # 本地 API 镜像
+├── Dockerfile.streamlit      # 本地 Streamlit 镜像
+├── supervisord.conf          # HF 单容器进程管理
+├── docker-entrypoint.sh      # 启动时检查/构建 ChromaDB
+├── requirements.txt
+└── .env.example
 ```
 
-## 开发日志 (Dev Log)
+---
 
-**v1.0 (MVP):** 基础设施搭建，通过 OpenAI 兼容接口跑通 Qwen-Plus。
-**v1.1 (Vision):** 攻克了 Qwen-VL 模型不支持 Tool Call 的问题，采用 Prompt 结构化工程实现 JSON 输出。
-**v1.2 (RAG):** 引入 ChromaDB，实现基于语义的风格检索 (Semantic Search)。
-**v1.3 (Agent):** 使用 LangGraph 重构逻辑，串联 Vision -> RAG -> Generate 工作流。
-**v1.4 (UI):** 搭建 Streamlit 前端界面，实现流式输出模拟 `Streaming Simulator`，并增加对非商品图的防幻觉过滤。
-**v1.5 (Core Fix):** 攻克 Streamlit DOM 渲染报错 `removeChild Error`，重构图片缓存机制 (BytesIO) 彻底解决跨会话丢失问题。
-**v1.6（Feat）：** 新增了 “对话框关键词约束” 功能，侧边栏 “清空历史对话” 功能
-**v2.0 (Release):** 优化 UI 状态反馈逻辑，完成 Hugging Face Space 部署。
+## 快速开始
 
-> *Designed by [Daphne502] - 2026*
+### 1. 克隆与环境变量
+
+```bash
+git clone https://github.com/Daphne502/E-ComMate.git
+cd E-ComMate
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env            # 填入 DASHSCOPE_API_KEY
+```
+
+`.env` 必填项：
+
+```bash
+DASHSCOPE_API_KEY=your_key_here
+LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_MODEL_NAME=qwen-plus
+VISION_MODEL_NAME=qwen-vl-max
+EMBEDDING_MODEL_NAME=text-embedding-v1
+REDIS_URL=redis://127.0.0.1:6379/0
+CACHE_TTL=3600
+ECOMMATE_API_URL=http://127.0.0.1:8000
+```
+
+### 2. 本地开发（双终端）
+
+**终端 1 — API：**
+
+```bash
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**终端 2 — Streamlit：**
+
+```bash
+streamlit run app.py
+API 文档：http://127.0.0.1:8000/docs
+前端：http://127.0.0.1:8501
+健康检查：http://127.0.0.1:8000/health
+```
+
+### 3. 本地 Docker Compose（推荐演示）
+
+```docker
+docker compose up --build
+```
+
+| 服务      | 地址                                            |
+| :-------- | :---------------------------------------------- |
+| Streamlit | [http://127.0.0.1:8501](http://127.0.0.1:8501/) |
+| FastAPI   | <http://127.0.0.1:8000/docs>                    |
+| Redis     | localhost:6379                                  |
+
+`data/` 目录挂载持久化，ChromaDB 不会每次重建。
+
+### 4. Hugging Face Spaces 部署（单容器方案）
+
+HF Spaces 仅暴露一个端口，采用**单 Docker 容器 + supervisord** 同时运行 API 与 Streamlit：
+
+| 进程 | 命令                                                         | 端口        |
+| :--- | :----------------------------------------------------------- | :---------- |
+| API  | `uvicorn api.main:app --host 127.0.0.1 --port 8000`          | 容器内 8000 |
+| UI   | `streamlit run app.py --server.port 7860 --server.address 0.0.0.0` | 对外 7860 |
+
+容器内 Streamlit 通过 `ECOMMATE_API_URL=http://127.0.0.1:8000` 访问 API。
+**Redis（Upstash）**： 在 HF Space → Settings → Secrets 中配置：
+
+```bash
+REDIS_URL=rediss://default:xxx@xxx.upstash.io:6379
+CACHE_TTL=3600
+DASHSCOPE_API_KEY=sk-xxx
+LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+```
+
+未配置 `REDIS_URL` 时自动降级为直连 ChromaDB，功能正常，检索稍慢。
+**ChromaDB:** 首次启动时 `docker-entrypoint.sh` 会从 `styles.csv` 自动构建向量库（约 1–2 分钟）。
+
+---
+
+## API 说明
+
+### `GET /health`
+
+健康检查，用于 Docker / 负载均衡探活。
+
+**响应：**
+
+```json
+{"status": "ok"}
+```
+
+### `POST /api/v1/generate`
+
+上传商品图并生成文案。
+
+**请求（multipart/form-data）：**
+
+| 字段          | 类型   | 说明                                               |
+| :------------ | :----- | :------------------------------------------------- |
+| `image`       | file   | 商品图片（jpg/png）                                |
+| `user_style`  | string | 小红书种草 / 京东/淘宝电商 / 朋友圈私域 / 抖音直播 |
+| `words_limit` | int    | 字数上限，默认 100                                 |
+| `user_note`   | string | 补充要求，如「突出618」                            |
+
+**响应示例：**
+
+```json
+{
+  "final_copy": "...",
+  "image_data": {
+    "description": "...",
+    "style": "简约",
+    "color_palette": ["浅粉色", "深棕色"],
+    "material": "针织棉",
+    "target_audience": "都市年轻女性"
+  },
+  "retrieved_examples": ["...", "...", "..."],
+  "elapsed_ms": 6034,
+  "timings": {
+    "vision_ms": 4622,
+    "retrieve_ms": 2,
+    "generate_ms": 1403
+  }
+}
+```
+
+---
+
+## 批量评测
+
+```python
+python eval/run_eval.py
+```
+
+测试集覆盖 **服饰 / 潮玩 / 食品** 三类商品、**四种平台风格**，共 12 条用例。
+报告输出至 `eval/eval_report.json`。
+
+**最近一次评测摘要：**
+
+| 指标             | 数值         |
+| :--------------- | :----------- |
+| 通过率           | 100% (12/12) |
+| 平均总耗时       | 7658 ms      |
+| 平均 retrieve_ms | 194 ms       |
+
+---
+
+## 开发日志
+
+| 版本 | 内容                                                         |
+| :--- | :----------------------------------------------------------- |
+| v1.0 | MVP：Qwen-Plus 文案生成                                      |
+| v1.1 | Qwen-VL 视觉解析，Prompt 结构化 JSON 输出                    |
+| v1.2 | ChromaDB 风格 RAG                                            |
+| v1.3 | LangGraph 串联 Vision → RAG → Generate                       |
+| v1.4 | Streamlit 前端，流式输出，非商品图防幻觉                     |
+| v2.0 | Hugging Face Spaces 首版部署                                 |
+| v2.1 | FastAPI 网关层，前后端分离                                   |
+| v2.2 | RAG 单例 + metadata 过滤 + Vision∥Retrieve 并行 + node timings |
+| v2.3 | Redis 缓存（本地 Docker / Upstash）                          |
+| v2.4 | 12 条规则评测 + Docker Compose 本地编排                      |
+| v2.5 | HF 单容器 supervisord 重部署 + Upstash Redis 线上缓存        |
+
+---
+
+## 常见问题
+
+**Q：HF 上第一次打开很慢？**
+A：冷启动需构建 ChromaDB 向量库，约 1–2 分钟；之后会快很多。
+
+**Q：Redis 连接失败怎么办？**
+A：系统自动降级为直连 ChromaDB，不影响生成，仅检索稍慢。
+
+**Q：为什么 RAG 范例有时和商品品类不完全匹配？**
+A：当前 `styles.csv` 以服饰文案为主，潮玩/食品场景后续将扩充品类子库或分 collection。
+
+**Q：100% 评测通过率说明什么？**
+A：说明当前 Prompt + 流程在规则约束下稳定，属于回归测试，不是文案主观质量评分。
+
+---
+
+## License
+
+MIT
+
+---
+
+> Designed by [Daphne502](https://github.com/Daphne502) · 2026
