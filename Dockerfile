@@ -11,13 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-# HF Docker Space 默认检查 7860
 EXPOSE 7860
 
 ENV ECOMMATE_API_URL=http://127.0.0.1:8000
 ENV REDIS_URL=
 ENV PYTHONUNBUFFERED=1
 
-CMD ["supervisord", "-c", "supervisord.conf"]
+CMD ["/docker-entrypoint.sh"]
