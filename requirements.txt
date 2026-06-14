@@ -87,12 +87,12 @@ opentelemetry-util-http==0.60b1
 orjson==3.11.7
 ormsgpack==1.12.2
 overrides==7.7.0
-packaging==23.2
+packaging>=23.0
 pandas==2.2.2
 pillow==10.4.0
 posthog==5.4.0
 propcache==0.4.1
-protobuf==4.25.8
+protobuf>=5.0,<7.0
 pyarrow==23.0.0
 pybase64==1.4.3
 pycparser==3.0
