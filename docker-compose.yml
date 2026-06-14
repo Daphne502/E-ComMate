@@ -9,7 +9,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.api
     container_name: ecommate-api
     ports:
       - "8000:8000"
