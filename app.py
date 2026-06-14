@@ -3,7 +3,8 @@ import os
 import time
 from PIL import Image
 
-from core.workflow import create_workflow
+import httpx
+API_BASE_URL = os.getenv("ECOMMATE_API_URL", "http://127.0.0.1:8000")
 
 # 基础页面配置
 st.set_page_config(
@@ -165,30 +166,28 @@ if st.session_state.generating:
             
             status.update(label="正在撰写最终文案...")
             
-            if create_workflow:
-                app = create_workflow()
-                inputs = {
-                    "image_path": st.session_state.temp_img_path,
-                    "user_style": style_option,
-                    "words_limit": str(length_limit),
-                    "user_note": st.session_state.get("current_user_note", ""), # 传给 Agent
-                    "image_data": {}, 
-                    "retrieved_examples": [],
-                    "final_copy": ""
-                }
-                res = app.invoke(inputs)
-                
-                # EighthCommit：移除“识别失败”的硬报错
-                image_data = res.get("image_data", {})
-                final_copy = res.get("final_copy", "生成出错")
-                debug_info = {
-                    "vision_analysis": image_data,
-                    "rag_references": res.get("retrieved_examples", [])
-                }
-            else:
-                time.sleep(1)
-                final_copy = "这是演示文案..."
-                debug_info = {"info": "Demo Mode"}
+            with open(st.session_state.temp_img_path, "rb") as f:
+                image_bytes = f.read()
+
+            with httpx.Client(timeout=120.0) as client:
+                response = client.post(
+                    f"{API_BASE_URL}/api/v1/generate",
+                    files={"image": ("product.jpg", image_bytes, "image/jpeg")},
+                    data={
+                        "user_style": style_option,
+                        "words_limit": str(length_limit),
+                        "user_note": st.session_state.get("current_user_note", ""),
+                    },
+                )
+                response.raise_for_status()
+                res = response.json()
+
+            final_copy = res.get("final_copy", "生成出错")
+            debug_info = {
+                "vision_analysis": res.get("image_data", {}),
+                "rag_references": res.get("retrieved_examples", []),
+                "elapsed_ms": res.get("elapsed_ms"),
+            }
                 
             # SeventhCommit: 任务完成,更新状态框为完成并折叠
             status.update(label="文案生成完毕！", expanded=False)
