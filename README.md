@@ -10,6 +10,18 @@ sdk: docker
 
 ---
 
+## 分支说明
+
+| 分支 | 用途 | 部署方式 |
+|:---|:---|:---|
+| [`main`](https://github.com/Daphne502/E-ComMate/tree/main) | 本地开发、Docker Compose、评测 | 双终端 / `docker compose up` |
+| [`hf-clean`](https://github.com/Daphne502/E-ComMate/tree/hf-clean) | **Hugging Face Spaces 线上 Demo** | 单容器 supervisord + Upstash Redis |
+
+> 在线 Demo 运行在 **`hf-clean`** 分支。克隆仓库后请先确认分支：  
+> `git checkout main`（本地） / `git checkout hf-clean`（复现 HF 部署）
+
+---
+
 ## 在线体验
 
 ### [Hugging Face Spaces 在线 Demo](https://daphne502-e-commate.hf.space)
@@ -64,7 +76,7 @@ flowchart TB
 | 缓存       | Redis（本地 Docker / 线上 Upstash Serverless）               |
 | 后端       | FastAPI + Uvicorn                                            |
 | 前端       | Streamlit                                                    |
-| 部署       | Docker Compose（本地）/ 单容器 supervisord（Hugging Face Spaces） |
+| 部署       | `main`：Docker Compose 三服务；`hf-clean`：HF Spaces 单容器 supervisord + Upstash Redis |
 | 评测       | 自研规则评测脚本（12 条用例，三品类 × 四风格）               |
 
 ---
@@ -87,36 +99,28 @@ flowchart TB
 
 ## 目录结构
 
+**共用（两分支一致）：** `api/`、`core/`、`eval/`、`assets/`、`data/`、`app.py`、`config.py`、`requirements.txt`
+
+**`main` 分支额外文件：**
+
 ```txt
 E-ComMate/
-├── api/                      # FastAPI 网关
-│   ├── main.py               # /health, /api/v1/generate
-│   └── schemas.py            # Pydantic 响应模型
-├── core/                     # Agent 核心
-│   ├── workflow.py           # LangGraph 编排（并行 + timings）
-│   ├── vision.py             # Qwen-VL 视觉解析
-│   ├── rag.py                # ChromaDB + STYLE_MAP + 单例
-│   ├── cache.py              # Redis 读写封装（失败自动降级）
-│   ├── llm.py                # Qwen-Plus 封装
-│   └── logging_config.py     # 统一日志
-├── eval/                     # 批量评测
-│   ├── test_cases.json       # 12 条测试用例
-│   ├── run_eval.py           # 评测脚本
-│   └── eval_report.json      # 运行后生成
-├── assets/                   # 演示图片
-├── data/
-│   ├── styles.csv            # 风格范例原始数据
-│   └── chroma_db/            # 向量索引（不提交 Git，运行时构建）
-├── app.py                    # Streamlit 前端
-├── config.py                 # 环境变量
-├── docker-compose.yml        # 本地三服务编排（api + streamlit + redis）
-├── Dockerfile                # HF Spaces 单容器镜像
-├── Dockerfile.api            # 本地 API 镜像
+├── docker-compose.yml        # 本地三服务：api + streamlit + redis
+├── Dockerfile                # 本地 API 镜像（docker-compose 使用）
 ├── Dockerfile.streamlit      # 本地 Streamlit 镜像
-├── supervisord.conf          # HF 单容器进程管理
-├── docker-entrypoint.sh      # 启动时检查/构建 ChromaDB
-├── requirements.txt
 └── .env.example
+```
+
+**`hf-clean` 分支额外文件（HF Spaces 部署）：**
+
+```txt
+E-ComMate/
+├── Dockerfile                # HF 单容器镜像（supervisord 管理双进程）
+├── supervisord.conf          # API(8000) + Streamlit(7860)
+├── docker-entrypoint.sh      # 启动时检查/构建 ChromaDB
+├── Dockerfile.api            # 保留，供参考
+├── Dockerfile.streamlit      # 保留，供参考
+└── docker-compose.yml        # 保留，本地调试可用
 ```
 
 ---
@@ -128,6 +132,8 @@ E-ComMate/
 ```bash
 git clone https://github.com/Daphne502/E-ComMate.git
 cd E-ComMate
+git checkout main   # 本地开发（默认）
+# git checkout hf-clean   # 仅当需要复现 HF 部署时
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -147,7 +153,7 @@ CACHE_TTL=3600
 ECOMMATE_API_URL=http://127.0.0.1:8000
 ```
 
-### 2. 本地开发（双终端）
+### 2. 本地开发（`main` 分支 · 双终端）
 
 **终端 1 — API：**
 
@@ -159,12 +165,15 @@ uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 ```bash
 streamlit run app.py
-API 文档：http://127.0.0.1:8000/docs
-前端：http://127.0.0.1:8501
-健康检查：http://127.0.0.1:8000/health
 ```
 
-### 3. 本地 Docker Compose（推荐演示）
+| 入口     | 地址                                            |
+| :------- | :---------------------------------------------- |
+| 前端     | [http://127.0.0.1:8501](http://127.0.0.1:8501/) |
+| API 文档 | <http://127.0.0.1:8000/docs>                      |
+| 健康检查 | <http://127.0.0.1:8000/health>                    |
+
+### 3. 本地 Docker Compose（`main` 分支 · 推荐演示）
 
 ```docker
 docker compose up --build
@@ -179,6 +188,10 @@ docker compose up --build
 `data/` 目录挂载持久化，ChromaDB 不会每次重建。
 
 ### 4. Hugging Face Spaces 部署（单容器方案）
+
+> ⚠️ **请使用 [`hf-clean`](https://github.com/Daphne502/E-ComMate/tree/hf-clean) 分支。**  
+> HF Space 在 Settings → Repository 中指定分支为 `hf-clean`。  
+> `main` 分支不含 supervisord 单容器配置，无法直接用于 HF Docker Space。
 
 HF Spaces 仅暴露一个端口，采用**单 Docker 容器 + supervisord** 同时运行 API 与 Streamlit：
 
@@ -196,6 +209,9 @@ CACHE_TTL=3600
 DASHSCOPE_API_KEY=sk-xxx
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
+
+> HF 环境无本地 Redis，需使用 [Upstash Redis](https://upstash.com/) 等 Serverless Redis，  
+> `REDIS_URL` 格式为 `rediss://...`（注意双 s 表示 TLS）。未配置时自动降级为 ChromaDB 直连。
 
 未配置 `REDIS_URL` 时自动降级为直连 ChromaDB，功能正常，检索稍慢。
 **ChromaDB:** 首次启动时 `docker-entrypoint.sh` 会从 `styles.csv` 自动构建向量库（约 1–2 分钟）。
@@ -284,7 +300,7 @@ python eval/run_eval.py
 | v2.2 | RAG 单例 + metadata 过滤 + Vision∥Retrieve 并行 + node timings |
 | v2.3 | Redis 缓存（本地 Docker / Upstash）                          |
 | v2.4 | 12 条规则评测 + Docker Compose 本地编排                      |
-| v2.5 | HF 单容器 supervisord 重部署 + Upstash Redis 线上缓存        |
+| v2.5 | `hf-clean`：HF 单容器 supervisord 重部署 + Upstash Redis 线上缓存 |
 
 ---
 
@@ -301,6 +317,12 @@ A：当前 `styles.csv` 以服饰文案为主，潮玩/食品场景后续将扩�
 
 **Q：100% 评测通过率说明什么？**
 A：说明当前 Prompt + 流程在规则约束下稳定，属于回归测试，不是文案主观质量评分。
+
+**Q：`main` 和 `hf-clean` 有什么区别？**  
+A：`main` 面向本地开发与 Docker Compose；`hf-clean` 面向 HF Spaces 单端口约束，使用 supervisord 同容器运行 API + Streamlit，并配合 Upstash Redis。核心业务代码（`core/`、`api/`）两分支一致。
+
+**Q：为什么 HF 用 7860 端口，本地用 8501？**  
+A：HF Spaces 要求对外暴露 7860；本地 Streamlit 默认 8501。API 在两种环境下均监听容器/本机 8000，仅 Streamlit 对外端口不同。
 
 ---
 
