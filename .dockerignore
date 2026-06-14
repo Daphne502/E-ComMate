@@ -5,3 +5,4 @@ __pycache__/
 .git/
 .env
 eval/eval_report.json
+data/chroma_db/
