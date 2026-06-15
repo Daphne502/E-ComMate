@@ -38,7 +38,7 @@ sdk: docker
 
 | 核心痛点          | E-ComMate 解决方案                                     | 技术支撑                             |
 | :---------------- | :----------------------------------------------------- | :----------------------------------- |
-| **视觉理解缺失**  | 从商品图提取颜色、材质、版型等结构化属性，减少「瞎编」 | **Qwen-VL-Max** 多模态大模型         |
+| **视觉理解缺失**  | 从商品图提取颜色、材质、版型等结构化属性，减少「瞎编」 | **Qwen3-VL-Plus** 多模态大模型         |
 | **风格同质化**    | 按平台切换文风，检索相似高分范例再生成                 | **RAG** + **ChromaDB** metadata 过滤 |
 | **流程不可控**    | 视觉解析、风格检索、文案生成解耦，节点可观测           | **LangGraph** StateGraph             |
 | **Demo 难工程化** | UI / API / Agent 三层分离，支持容器化与缓存            | **FastAPI** + **Docker** + **Redis** |
@@ -70,7 +70,7 @@ flowchart TB
 
 | 层级       | 技术                                                         |
 | :--------- | :----------------------------------------------------------- |
-| 大模型     | 通义千问 Qwen-VL-Max（视觉）、Qwen-Plus（生成）、text-embedding-v1（向量）|
+| 大模型 Qwen3-VL-Plus（视觉）、Qwen-Plus（生成）、text-embedding-v1（向量）|
 | Agent 编排 | LangChain / LangGraph（StateGraph + 并行边 + timings reducer） |
 | RAG        | ChromaDB 本地向量库 + metadata 风格过滤                      |
 | 缓存       | Redis（本地 Docker / 线上 Upstash Serverless）               |
@@ -146,7 +146,7 @@ cp .env.example .env            # 填入 DASHSCOPE_API_KEY
 DASHSCOPE_API_KEY=your_key_here
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen-plus
-VISION_MODEL_NAME=qwen-vl-max
+VISION_MODEL_NAME=qwen3-vl-plus
 EMBEDDING_MODEL_NAME=text-embedding-v1
 REDIS_URL=redis://127.0.0.1:6379/0
 CACHE_TTL=3600
@@ -291,7 +291,7 @@ python eval/run_eval.py
 | 版本 | 内容                                                         |
 | :--- | :----------------------------------------------------------- |
 | v1.0 | MVP：Qwen-Plus 文案生成                                      |
-| v1.1 | Qwen-VL 视觉解析，Prompt 结构化 JSON 输出                    |
+| v1.1 | Qwen3-VL-Plus 视觉解析，Prompt 结构化 JSON 输出                    |
 | v1.2 | ChromaDB 风格 RAG                                            |
 | v1.3 | LangGraph 串联 Vision → RAG → Generate                       |
 | v1.4 | Streamlit 前端，流式输出，非商品图防幻觉                     |
